@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberArena | Coming Soon</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --bg:#050816;
+    --card:rgba(12,18,35,.75);
+    --cyan:#00F5FF;
+    --pink:#FF00D4;
+    --white:#ffffff;
+    --gray:#a5b3c7;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:'Orbitron',sans-serif;
+    background:var(--bg);
+    color:var(--white);
+    overflow-x:hidden;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+}
+
+/* Animated Gradient */
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:
+    radial-gradient(circle at top left,#00f5ff22,transparent 40%),
+    radial-gradient(circle at bottom right,#ff00d422,transparent 40%);
+    animation:gradientMove 8s ease infinite alternate;
+    z-index:-3;
+}
+
+@keyframes gradientMove{
+    from{transform:translate(0,0);}
+    to{transform:translate(-40px,-30px);}
+}
+
+/* Cyber Grid */
+.grid{
+    position:fixed;
+    inset:0;
+    background-image:
+        linear-gradient(rgba(0,245,255,.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,245,255,.08) 1px, transparent 1px);
+    background-size:40px 40px;
+    transform:perspective(700px) rotateX(70deg);
+    transform-origin:top;
+    animation:gridMove 12s linear infinite;
+    z-index:-2;
+}
+
+@keyframes gridMove{
+    from{background-position:0 0;}
+    to{background-position:0 40px;}
+}
+
+/* Scan Line */
+.scan{
+    position:fixed;
+    inset:0;
+    background:linear-gradient(
+        transparent 0%,
+        rgba(255,255,255,.04) 50%,
+        transparent 100%
+    );
+    background-size:100% 8px;
+    pointer-events:none;
+    z-index:-1;
+}
+
+/* Card */
+.container{
+    width:min(90%,850px);
+    padding:60px 45px;
+    border:1px solid rgba(0,245,255,.25);
+    background:var(--card);
+    backdrop-filter:blur(18px);
+    border-radius:20px;
+    text-align:center;
+    box-shadow:
+        0 0 20px rgba(0,245,255,.15),
+        0 0 80px rgba(255,0,212,.08);
+}
+
+.logo{
+    font-size:clamp(2.7rem,7vw,5rem);
+    font-weight:800;
+    letter-spacing:4px;
+    color:var(--cyan);
+    text-shadow:
+        0 0 8px var(--cyan),
+        0 0 20px var(--cyan),
+        0 0 45px var(--cyan);
+}
+
+.tagline{
+    margin-top:18px;
+    color:var(--pink);
+    letter-spacing:5px;
+    font-size:clamp(.8rem,2vw,1.1rem);
+}
+
+.line{
+    width:220px;
+    height:3px;
+    margin:35px auto;
+    background:linear-gradient(90deg,var(--cyan),var(--pink));
+    box-shadow:0 0 15px var(--cyan);
+}
+
+.title{
+    font-size:clamp(2rem,5vw,3.4rem);
+    margin-bottom:20px;
+    text-shadow:0 0 15px var(--pink);
+}
+
+.description{
+    max-width:650px;
+    margin:auto;
+    color:var(--gray);
+    line-height:1.9;
+    font-size:clamp(.95rem,2vw,1.1rem);
+}
+
+.button{
+    display:inline-block;
+    margin-top:40px;
+    padding:16px 40px;
+    color:var(--cyan);
+    border:2px solid var(--cyan);
+    text-decoration:none;
+    border-radius:50px;
+    transition:.35s;
+    font-weight:700;
+    letter-spacing:3px;
+}
+
+.button:hover{
+    background:var(--cyan);
+    color:#000;
+    box-shadow:
+        0 0 15px var(--cyan),
+        0 0 35px var(--cyan);
+}
+
+.status{
+    margin-top:35px;
+    color:#7afcff;
+    font-size:.9rem;
+    letter-spacing:2px;
+}
+
+.cursor{
+    animation:blink .8s infinite;
+}
+
+@keyframes blink{
+    50%{opacity:0;}
+}
+
+.footer{
+    margin-top:50px;
+    color:#7e8ba3;
+    font-size:.9rem;
+    letter-spacing:1px;
+}
+
+.footer span{
+    color:var(--cyan);
+}
+
+/* Glitch */
+.glitch{
+    animation:glitch 2s infinite;
+}
+
+@keyframes glitch{
+
+0%,100%{
+text-shadow:
+2px 2px var(--cyan),
+-2px -2px var(--pink);
+}
+
+20%{
+transform:translate(1px,-1px);
+}
+
+40%{
+transform:translate(-1px,1px);
+}
+
+60%{
+transform:translate(2px,0);
+}
+
+80%{
+transform:translate(-2px,0);
+}
+
+}
+
+/* Mobile */
+@media(max-width:768px){
+
+.container{
+padding:45px 25px;
+width:92%;
+}
+
+.logo{
+letter-spacing:2px;
+}
+
+.tagline{
+letter-spacing:2px;
+}
+
+.line{
+width:150px;
+margin:25px auto;
+}
+
+.button{
+padding:14px 28px;
+font-size:.85rem;
+}
+
+.description{
+line-height:1.7;
+}
+
+}
+
+@media(max-width:480px){
+
+.container{
+padding:35px 20px;
+border-radius:15px;
+}
+
+.logo{
+font-size:2.2rem;
+}
+
+.title{
+font-size:1.8rem;
+}
+
+.description{
+font-size:.95rem;
+}
+
+.button{
+width:100%;
+}
+
+.footer{
+font-size:.8rem;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="grid"></div>
+<div class="scan"></div>
+
+<div class="container">
+
+<h1 class="logo glitch">
+CYBERARENA
+</h1>
+
+<p class="tagline">
+ENTER THE FUTURE OF CYBERSECURITY
+</p>
+
+<div class="line"></div>
+
+<h2 class="title">
+Platform Coming Soon
+</h2>
+
+<p class="description">
+CyberArena is currently under development. We're building a next-generation platform for cybersecurity enthusiasts, ethical hackers, students, and professionals. Get ready for hands-on labs, learning resources, security challenges, and a powerful community built for the future.
+</p>
+
+<a href="#" class="button">
+COMING SOON
+</a>
+
+<div class="status">
+> Initializing CyberArena...<span class="cursor">_</span>
+</div>
+
+<div class="footer">
+Designed & Developed by <span>Devil</span>
+</div>
+
+</div>
+
+</body>
+</html>
