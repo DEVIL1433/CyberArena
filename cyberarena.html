@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CyberArena</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:        #0a0f0d;
+    --panel:     #0f1613;
+    --panel-2:   #131c19;
+    --line:      #1f2b26;
+    --green:     #3ddc84;
+    --green-dim: #26906a;
+    --cyan:      #4fd1ff;
+    --amber:     #e8a33d;
+    --red:       #ff5c5c;
+    --text:      #cfe9de;
+    --muted:     #5c7269;
+    --white:     #eafff4;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(61,220,132,0.05), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:20px;
+  }
+
+  .frame{
+    width:100%;
+    max-width:1040px;
+    height:88vh;
+    max-height:840px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.4), 0 30px 80px rgba(0,0,0,0.55), inset 0 0 60px rgba(61,220,132,0.02);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+
+  .titlebar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 16px;
+    background:linear-gradient(180deg,#121a17,#0f1613);
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .titlebar .dots{display:flex;gap:6px;}
+  .dots span{width:10px;height:10px;border-radius:50%;background:#233129;display:inline-block;}
+  .titlebar .name{font-size:12px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;}
+  .titlebar .name b{color:var(--green);}
+
+  .status{
+    display:grid;
+    grid-template-columns:1fr auto auto;
+    gap:14px;
+    padding:10px 16px;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--line);
+    font-size:12px;
+    flex-shrink:0;
+  }
+  .status .obj{color:var(--text);}
+  .status .obj .label{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:10px;display:block;margin-bottom:2px;}
+  .status .rank{color:var(--cyan);white-space:nowrap;}
+  .trace-wrap{width:150px;}
+  .trace-wrap .label{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:10px;display:flex;justify-content:space-between;}
+  .trace-bar{height:6px;border-radius:3px;background:#1a2420;overflow:hidden;margin-top:4px;border:1px solid var(--line);}
+  .trace-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--amber),var(--red));transition:width .4s ease;}
+
+  .screen{
+    flex:1;
+    overflow-y:auto;
+    padding:16px 18px;
+    font-size:13.5px;
+    line-height:1.65;
+  }
+  .screen::-webkit-scrollbar{width:10px;}
+  .screen::-webkit-scrollbar-thumb{background:#1c2622;border-radius:6px;}
+  .line{white-space:pre-wrap;word-break:break-word;}
+  .line.cmd{color:var(--white);}
+  .line.cmd .prompt{color:var(--green);}
+  .out-ok{color:var(--green);}
+  .out-info{color:var(--text);}
+  .out-muted{color:var(--muted);}
+  .out-warn{color:var(--amber);}
+  .out-error{color:var(--red);}
+  .out-cyan{color:var(--cyan);}
+  .flag{color:#0a0f0d;background:var(--green);padding:1px 6px;border-radius:3px;font-weight:600;}
+  table.nmap{border-collapse:collapse;margin:4px 0;}
+  table.nmap td{padding:1px 14px 1px 0;}
+  .dirname{color:var(--cyan);}
+  .filename{color:var(--text);}
+
+  .lab{
+    margin:10px 0;
+    border:1px solid var(--line);
+    background:#0c1310;
+    border-radius:6px;
+    padding:14px 16px;
+    max-width:420px;
+  }
+  .lab .lab-title{color:var(--cyan);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;}
+  .lab label{display:block;font-size:11px;color:var(--muted);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.06em;}
+  .lab input{
+    width:100%;
+    background:#0a0f0d;
+    border:1px solid var(--line);
+    color:var(--white);
+    font-family:inherit;
+    font-size:13px;
+    padding:7px 9px;
+    border-radius:4px;
+  }
+  .lab input:focus{outline:none;border-color:var(--green-dim);}
+  .lab button{
+    margin-top:12px;
+    background:var(--green);
+    color:#06110b;
+    border:none;
+    font-family:inherit;
+    font-weight:600;
+    font-size:12px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    padding:8px 14px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .lab button:hover{background:#57e79a;}
+  .lab .lab-note{margin-top:10px;font-size:11px;color:var(--muted);}
+
+  .inputRow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 18px;
+    border-top:1px solid var(--line);
+    background:var(--panel-2);
+    flex-shrink:0;
+  }
+  .inputRow .prompt{color:var(--green);font-size:13.5px;white-space:nowrap;}
+  .inputRow input{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--white);
+    font-family:inherit;
+    font-size:13.5px;
+    caret-color:var(--green);
+  }
+  .inputRow input:focus{outline:none;}
+  .inputRow input.masked{ -webkit-text-security: disc; text-security: disc; }
+
+  @media (max-width:640px){
+    .frame{height:94vh;}
+    .status{grid-template-columns:1fr;gap:6px;}
+    .trace-wrap{width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+  <div class="titlebar">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="name">CYBERARENA // <b>secure shell</b></div>
+    <div class="name" id="clock">--:--:--</div>
+  </div>
+
+  <div class="status">
+    <div class="obj">
+      <span class="label">Current objective</span>
+      <span id="objText">Boot the terminal to begin.</span>
+    </div>
+    <div class="rank"><span id="rankText">RANK: RECRUIT</span></div>
+    <div class="trace-wrap">
+      <div class="label"><span>trace</span><span id="traceNum">0%</span></div>
+      <div class="trace-bar"><div class="trace-fill" id="traceFill"></div></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen"></div>
+
+  <div class="inputRow">
+    <span class="prompt" id="promptLabel">recruit@cyberarena:~$</span>
+    <input id="cmdInput" autocomplete="off" spellcheck="false" autofocus />
+  </div>
+</div>
+
+<script>
+(function(){
+  const screen = document.getElementById('screen');
+  const input = document.getElementById('cmdInput');
+  const promptLabel = document.getElementById('promptLabel');
+  const objText = document.getElementById('objText');
+  const rankText = document.getElementById('rankText');
+  const traceFill = document.getElementById('traceFill');
+  const traceNum = document.getElementById('traceNum');
+
+  // ================= virtual filesystem engine =================
+  function dirNode(){ return {type:'dir', children:{}}; }
+  function fileNode(content, perm){ return {type:'file', content: content||'', perm: perm||'-rw-r--r--'}; }
+
+  function buildTree(flatFiles){
+    const root = dirNode();
+    for(const [path, content] of Object.entries(flatFiles)){
+      const parts = path.split('/').filter(Boolean);
+      let node = root;
+      for(let i=0;i<parts.length-1;i++){
+        const seg = parts[i];
+        if(!node.children[seg]) node.children[seg] = dirNode();
+        node = node.children[seg];
+      }
+      node.children[parts[parts.length-1]] = fileNode(content);
+    }
+    return root;
+  }
+
+  function resolvePath(cwd, home, pathStr){
+    if(!pathStr) return cwd.slice();
+    let segs = pathStr.startsWith('/') ? [] : cwd.slice();
+    let str = pathStr;
+    if(str === '~' || str.startsWith('~/')){
+      segs = home.slice();
+      str = str.slice(1);
+    }
+    str.split('/').filter(Boolean).forEach(p => {
+      if(p === '.') return;
+      else if(p === '..') segs.pop();
+      else segs.push(p);
+    });
+    return segs;
+  }
+
+  function getNode(root, segs){
+    let node = root;
+    for(const s of segs){
+      if(!node || node.type !== 'dir' || !node.children[s]) return null;
+      node = node.children[s];
+    }
+    return node;
+  }
+  function getParent(root, segs){
+    if(segs.length === 0) return null;
+    return getNode(root, segs.slice(0,-1));
+  }
+  function displayPath(segs, home){
+    const abs = '/' + segs.join('/');
+    const homeAbs = '/' + home.join('/');
+    if(abs === homeAbs) return '~';
+    if(abs.startsWith(homeAbs + '/')) return '~' + abs.slice(homeAbs.length);
+    return abs || '/';
+  }
+
+  // ================= range content =================
+  const LOCAL_FS = buildTree({
+    '/home/recruit/assignment_114.txt':
+      'CASE #114 — ENGAGEMENT BRIEF\n\n' +
+      'Client:        Meridian Holdings\n' +
+      'Scope:         10.10.14.2 (single external host)\n' +
+      'Authorization: signed, on file with legal\n' +
+      'Objective:     identify exposed services and assess overall exposure.\n\n' +
+      'Rules of engagement: passive and active scanning permitted against the\n' +
+      'scoped host only. Do not modify production data. Document every step.\n\n' +
+      '— J. Okafor, Engagement Lead',
+    '/home/recruit/assignment_115.txt':
+      'CASE #115 — ENGAGEMENT BRIEF (PENDING)\n\n' +
+      'Scope:  10.10.14.5\n' +
+      'Status: authorization pending — hold until case #114 is closed out.\n\n' +
+      '— J. Okafor, Engagement Lead',
+    '/etc/motd':
+      'Authorized users only. All activity is logged and monitored.'
+  });
+
+  const NET = {
+    '10.10.14.2': {
+      name: 'BEACHHEAD — corp test server',
+      ports: [
+        {port:22, svc:'ssh', ver:'OpenSSH 7.4'},
+        {port:80, svc:'http', ver:'Apache httpd 2.4.6 ((CentOS))'}
+      ],
+      web: {
+        html: [
+          '<html><body>',
+          '<h1>Welcome to CorpTest Intranet</h1>',
+          '<p>Staging environment — do not use production data.</p>',
+          '<!-- TODO: change default cred admin:admin123 before prod -->',
+          '</body></html>'
+        ].join('\n')
+      },
+      ssh: {
+        validUser: 'admin',
+        validPass: 'admin123',
+        flat: {
+          '/home/admin/notes.txt': 'Reminder: rotate credentials weekly.\n- IT Dept',
+          '/home/admin/flag.txt': 'FLAG{recon_plus_default_creds}',
+          '/var/log/auth.log':
+            'Aug 07 09:12:01 beachhead sshd[1092]: Failed password for admin from 203.0.113.4 port 51122 ssh2\n' +
+            'Aug 07 09:12:05 beachhead sshd[1092]: Accepted password for admin from 203.0.113.4 port 51122 ssh2\n' +
+            'Aug 07 09:14:44 beachhead sudo: admin : COMMAND=/bin/true',
+          '/etc/hostname': 'beachhead'
+        }
+      }
+    },
+    '10.10.14.5': {
+      name: 'ORCHARD — login gateway',
+      ports: [
+        {port:80, svc:'http', ver:'nginx 1.18.0 (login portal)'}
+      ],
+      sqli: { flag: 'FLAG{classic_or_1equals1_bypass}' }
+    }
+  };
+
+  const MISSIONS = [
+    { title: 'Case #114', brief: 'A new engagement has come in. Check your home directory for the brief and take it from there.' },
+    { title: 'Case #114 — In Progress', brief: 'Continue working the scope you were given.' },
+    { title: 'Case #114 — In Progress', brief: 'Continue working the scope you were given.' },
+    { title: 'Case #115', brief: 'Case #114 is closed. A second brief in your home directory is now cleared to proceed.' },
+    { title: 'Cases Closed', brief: 'Both engagements are complete. Type `debrief` for a summary, or keep working.' }
+  ];
+  const RANKS = ['RECRUIT','JUNIOR PENTESTER','PENTESTER','SENIOR OPERATOR','SENIOR OPERATOR'];
+
+  // ================= session contexts =================
+  // a "context" = one open shell (local or ssh). contexts[contexts.length-1] is active.
+  const localCtx = { kind:'local', user:'recruit', host:'cyberarena', fsRoot: LOCAL_FS,
+                      home:['home','recruit'], cwd:['home','recruit'] };
+  const contexts = [localCtx];
+  function ctx(){ return contexts[contexts.length-1]; }
+
+  const state = {
+    stage: 0,
+    trace: 0,
+    scanned: {},
+    knownCreds: {},
+    awaitingPassword: null,
+    history: [],
+    histIdx: -1
+  };
+
+  // ================= output helpers =================
+  function line(html, cls){
+    const d = document.createElement('div');
+    d.className = 'line ' + (cls||'out-info');
+    d.innerHTML = html;
+    screen.appendChild(d);
+    screen.scrollTop = screen.scrollHeight;
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function promptText(){
+    const c = ctx();
+    return `${c.user}@${c.host}:${displayPath(c.cwd, c.home)}$`;
+  }
+  function echoCmd(text){
+    line(`<span class="prompt">${escapeHtml(promptText())}</span> ${escapeHtml(text)}`, 'cmd');
+  }
+  function updatePromptLabel(){
+    if(state.awaitingPassword){
+      promptLabel.textContent = `Password for ${state.awaitingPassword.user}@${state.awaitingPassword.host}:`;
+      input.classList.add('masked');
+      return;
+    }
+    input.classList.remove('masked');
+    promptLabel.textContent = promptText();
+  }
+  function setObjective(){
+    const m = MISSIONS[state.stage];
+    objText.textContent = `[${m.title}] ${m.brief}`;
+    rankText.textContent = 'RANK: ' + RANKS[Math.min(state.stage, RANKS.length-1)];
+    updatePromptLabel();
+  }
+  function addTrace(amount, reason){
+    state.trace = Math.max(0, Math.min(100, state.trace + amount));
+    traceFill.style.width = state.trace + '%';
+    traceNum.textContent = state.trace + '%';
+    if(reason && amount > 0) line(`[!] trace risk +${amount}% — ${reason}`, 'out-warn');
+    if(state.trace >= 100){
+      line('[!] SESSION TERMINATED — you were detected. (type `reset` to clear trace and drop sessions)', 'out-error');
+      while(contexts.length > 1) contexts.pop();
+      updatePromptLabel();
+    }
+  }
+  function advanceStage(to){
+    if(to > state.stage){
+      state.stage = to;
+      line('');
+      line(`════ OBJECTIVE UPDATED: ${MISSIONS[to].title} ════`, 'out-cyan');
+      setObjective();
+    }
+  }
+
+  // ================= boot =================
+  function boot(){
+    const banner = [
+      ' ██████╗██╗   ██╗██████╗ ███████╗██████╗  █████╗ ██████╗ ███████╗███╗   ██╗ █████╗ ',
+      '██╔════╝╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔════╝████╗  ██║██╔══██╗',
+      '██║      ╚████╔╝ ██████╔╝█████╗  ██████╔╝███████║██████╔╝█████╗  ██╔██╗ ██║███████║',
+      '██║       ╚██╔╝  ██╔══██╗██╔══╝  ██╔══██╗██╔══██║██╔══██╗██╔══╝  ██║╚██╗██║██╔══██║',
+      '╚██████╗   ██║   ██████╔╝███████╗██║  ██║██║  ██║██║  ██║███████╗██║ ╚████║██║  ██║',
+      ' ╚═════╝   ╚═╝   ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝'
+    ].join('\n');
+    line(`<pre style="margin:0;color:var(--green-dim);font-size:8px;line-height:1.2;overflow-x:auto">${banner}</pre>`);
+    line(`Last login: ${new Date(Date.now()-3600*1000).toString().replace(/ GMT.*/,'')} from 10.0.2.15`, 'out-muted');
+    line('Authorized users only. All activity is logged and monitored.', 'out-muted');
+    line('');
+    setObjective();
+  }
+
+  // ================= man pages =================
+  const MAN = {
+    nmap: 'nmap <host>\n  Scan a target for open ports and running services.',
+    ssh: 'ssh <user>@<host>\n  Open a remote shell if the port is open and the password is correct.',
+    open: 'open <host>\n  Fetch whatever is served on that host\'s web port.',
+    ls: 'ls [-l] [-a] [path]\n  List directory contents. -l long format, -a show hidden files.',
+    cd: 'cd [path]\n  Change directory. No argument goes home. `cd ..` goes up one level.',
+    pwd: 'pwd\n  Print the current working directory.',
+    cat: 'cat <file> [file2 ...]\n  Print file contents.',
+    echo: 'echo <text> [> file | >> file]\n  Print text, or write/append it to a file.',
+    mkdir: 'mkdir [-p] <dir>\n  Create a directory. -p creates parent directories as needed.',
+    touch: 'touch <file>\n  Create an empty file if it does not already exist.',
+    rm: 'rm [-r] <path>\n  Delete a file. -r required to delete a directory.',
+    cp: 'cp <src> <dst>\n  Copy a file.',
+    mv: 'mv <src> <dst>\n  Move or rename a file.',
+    grep: 'grep [-i] <pattern> <file>\n  Print lines in file matching pattern. -i ignores case.',
+    find: 'find [path] -name <pattern>\n  Recursively list files matching a name pattern (supports * wildcard).',
+    wc: 'wc [-l] <file>\n  Count lines, words and characters in a file.',
+    head: 'head [-n N] <file>\n  Print the first N lines of a file (default 10).',
+    tail: 'tail [-n N] <file>\n  Print the last N lines of a file (default 10).',
+    chmod: 'chmod <mode> <file>\n  Change a file\'s permission string, e.g. chmod 644 file.',
+    whoami: 'whoami\n  Print current username.',
+    id: 'id\n  Print current user and group identity.',
+    uname: 'uname [-a]\n  Print system information.',
+    date: 'date\n  Print the current date and time.',
+    ps: 'ps [aux]\n  List running processes on the current host.',
+    sudo: 'sudo -l\n  List commands the current user may run as another user.',
+    history: 'history\n  Show previously run commands.',
+    exit: 'exit\n  Close the current ssh session and return to the previous shell.',
+    clear: 'clear\n  Clear the screen.',
+    status: 'status\n  Re-print the current objective.',
+    reset: 'reset\n  Reset trace meter and close all ssh sessions.',
+    debrief: 'debrief\n  Summary of the real-world techniques covered.'
+  };
+
+  function cmd_help(){
+    line('Filesystem & shell:', 'out-cyan');
+    [['ls [-l][-a] [path]','list directory'], ['cd [path]','change directory'], ['pwd','print working directory'],
+     ['cat <file>','print file contents'], ['echo <text> [> file]','print or write text'],
+     ['mkdir [-p] <dir>','make directory'], ['touch <file>','create empty file'],
+     ['rm [-r] <path>','delete file/dir'], ['cp <src> <dst>','copy file'], ['mv <src> <dst>','move/rename file'],
+     ['grep [-i] <pat> <file>','search file for text'], ['find [path] -name <pat>','search for files by name'],
+     ['wc [-l] <file>','count lines/words/chars'], ['head/tail [-n N] <file>','show start/end of file'],
+     ['chmod <mode> <file>','change permissions'], ['whoami / id','current identity'],
+     ['uname [-a]','system info'], ['date','current date/time'], ['ps [aux]','list processes'],
+     ['sudo -l','list sudo privileges'], ['history','command history'], ['clear','clear screen']
+    ].forEach(r => line(`  <span class="out-cyan">${r[0].padEnd(24)}</span>${r[1]}`, 'out-info'));
+    line('Network / mission:', 'out-cyan');
+    [['nmap <host>','scan a target'], ['open <host>','fetch a web page / portal'],
+     ['ssh user@host','remote login'], ['exit','close ssh session'],
+     ['status','show objective'], ['debrief','recap lessons'], ['reset','clear trace / sessions'],
+     ['man <command>','detailed help']
+    ].forEach(r => line(`  <span class="out-cyan">${r[0].padEnd(24)}</span>${r[1]}`, 'out-info'));
+  }
+  function cmd_man(arg){
+    if(!arg){ line('usage: man &lt;command&gt;', 'out-warn'); return; }
+    const entry = MAN[arg];
+    if(!entry){ line(`No manual entry for '${arg}'.`, 'out-error'); return; }
+    line(`<pre style="margin:0;white-space:pre-wrap">${escapeHtml(entry)}</pre>`, 'out-info');
+  }
+
+  // ================= filesystem commands =================
+  function fsError(cmd, path, msg){ line(`${cmd}: ${path}: ${msg}`, 'out-error'); }
+
+  function cmd_pwd(){ line(displayPath(ctx().cwd, ctx().home) === '~' ? '/' + ctx().cwd.join('/') : '/' + ctx().cwd.join('/'), 'out-info'); }
+
+  function cmd_ls(args){
+    const c = ctx();
+    const flags = args.filter(a => a.startsWith('-')).join('');
+    const pathArg = args.find(a => !a.startsWith('-'));
+    const segs = resolvePath(c.cwd, c.home, pathArg);
+    const node = getNode(c.fsRoot, segs);
+    if(!node){ fsError('ls', pathArg||'.', 'No such file or directory'); return; }
+    if(node.type === 'file'){ line(pathArg, 'out-info'); return; }
+    const names = Object.keys(node.children).sort();
+    if(names.length === 0){ return; }
+    if(flags.includes('l')){
+      names.forEach(n => {
+        const child = node.children[n];
+        const isDir = child.type === 'dir';
+        const perm = isDir ? 'drwxr-xr-x' : (child.perm || '-rw-r--r--');
+        const size = isDir ? 4096 : (child.content||'').length;
+        const label = isDir ? `<span class="dirname">${n}/</span>` : `<span class="filename">${n}</span>`;
+        line(`${perm}  ${String(size).padStart(5)}  ${label}`, 'out-info');
+      });
+    } else {
+      line(names.map(n => node.children[n].type==='dir' ? `<span class="dirname">${n}/</span>` : `<span class="filename">${n}</span>`).join('  '), 'out-info');
+    }
+  }
+
+  function cmd_cd(args){
+    const c = ctx();
+    const target = args[0];
+    const segs = target ? resolvePath(c.cwd, c.home, target) : c.home.slice();
+    const node = getNode(c.fsRoot, segs);
+    if(!node){ fsError('cd', target||'~', 'No such file or directory'); return; }
+    if(node.type !== 'dir'){ fsError('cd', target, 'Not a directory'); return; }
+    c.cwd = segs;
+    updatePromptLabel();
+  }
+
+  function cmd_cat(args){
+    const c = ctx();
+    if(args.length === 0){ line('usage: cat &lt;file&gt;', 'out-warn'); return; }
+    args.forEach(a => {
+      const segs = resolvePath(c.cwd, c.home, a);
+      const node = getNode(c.fsRoot, segs);
+      if(!node){ fsError('cat', a, 'No such file or directory'); return; }
+      if(node.type === 'dir'){ fsError('cat', a, 'Is a directory'); return; }
+      if(node.content.startsWith('FLAG{')){
+        line(`<span class="flag">${escapeHtml(node.content)}</span>`, 'out-ok');
+        if(state.stage === 2 && c.kind === 'ssh' && c.hostKey === '10.10.14.2'){
+          line('Recon → info leak → weak creds. That\'s a full real-world compromise chain.', 'out-info');
+          advanceStage(3);
+        }
+      } else {
+        line(escapeHtml(node.content), 'out-info');
+      }
+    });
+  }
+
+  function cmd_echo(rawArgs, rawText){
+    const c = ctx();
+    let mode = null, target = null, text = rawText;
+    const gtgt = rawText.lastIndexOf('>>');
+    const gt = rawText.lastIndexOf('>');
+    if(gtgt !== -1){
+      mode = 'append'; text = rawText.slice(0,gtgt).trim(); target = rawText.slice(gtgt+2).trim();
+    } else if(gt !== -1){
+      mode = 'write'; text = rawText.slice(0,gt).trim(); target = rawText.slice(gt+1).trim();
+    }
+    // strip surrounding quotes
+    text = text.replace(/^["']|["']$/g, '');
+    if(!mode){ line(escapeHtml(text), 'out-info'); return; }
+    const segs = resolvePath(c.cwd, c.home, target);
+    const parent = getParent(c.fsRoot, segs);
+    if(!parent || parent.type !== 'dir'){ fsError('echo', target, 'No such file or directory'); return; }
+    const fname = segs[segs.length-1];
+    const existing = parent.children[fname];
+    if(existing && existing.type === 'dir'){ fsError('echo', target, 'Is a directory'); return; }
+    const newContent = mode === 'append' && existing ? existing.content + '\n' + text : text;
+    parent.children[fname] = fileNode(newContent);
+  }
+
+  function cmd_mkdir(args){
+    const c = ctx();
+    const pFlag = args.includes('-p');
+    const target = args.find(a => !a.startsWith('-'));
+    if(!target){ line('usage: mkdir [-p] &lt;dir&gt;', 'out-warn'); return; }
+    const segs = resolvePath(c.cwd, c.home, target);
+    if(pFlag){
+      let node = c.fsRoot;
+      for(const s of segs){
+        if(!node.children[s]) node.children[s] = dirNode();
+        node = node.children[s];
+      }
+    } else {
+      const parent = getParent(c.fsRoot, segs);
+      if(!parent){ fsError('mkdir', target, 'No such file or directory'); return; }
+      const name = segs[segs.length-1];
+      if(parent.children[name]){ fsError('mkdir', target, 'File exists'); return; }
+      parent.children[name] = dirNode();
+    }
+  }
+
+  function cmd_touch(args){
+    const c = ctx();
+    const target = args[0];
+    if(!target){ line('usage: touch &lt;file&gt;', 'out-warn'); return; }
+    const segs = resolvePath(c.cwd, c.home, target);
+    const parent = getParent(c.fsRoot, segs);
+    if(!parent){ fsError('touch', target, 'No such file or directory'); return; }
+    const name = segs[segs.length-1];
+    if(!parent.children[name]) parent.children[name] = fileNode('');
+  }
+
+  function cmd_rm(args){
+    const c = ctx();
+    const recursive = args.includes('-r') || args.includes('-rf');
+    const target = args.find(a => !a.startsWith('-'));
+    if(!target){ line('usage: rm [-r] &lt;path&gt;', 'out-warn'); return; }
+    const segs = resolvePath(c.cwd, c.home, target);
+    const parent = getParent(c.fsRoot, segs);
+    const name = segs[segs.length-1];
+    if(!parent || !parent.children[name]){ fsError('rm', target, 'No such file or directory'); return; }
+    if(parent.children[name].type === 'dir' && !recursive){ fsError('rm', target, 'is a directory (use -r)'); return; }
+    delete parent.children[name];
+  }
+
+  function cmd_cp(args){
+    const c = ctx();
+    if(args.length < 2){ line('usage: cp &lt;src&gt; &lt;dst&gt;', 'out-warn'); return; }
+    const srcSegs = resolvePath(c.cwd, c.home, args[0]);
+    const srcNode = getNode(c.fsRoot, srcSegs);
+    if(!srcNode || srcNode.type !== 'file'){ fsError('cp', args[0], 'No such file'); return; }
+    const dstSegs = resolvePath(c.cwd, c.home, args[1]);
+    const parent = getParent(c.fsRoot, dstSegs);
+    if(!parent){ fsError('cp', args[1], 'No such file or directory'); return; }
+    parent.children[dstSegs[dstSegs.length-1]] = fileNode(srcNode.content, srcNode.perm);
+  }
+
+  function cmd_mv(args){
+    const c = ctx();
+    if(args.length < 2){ line('usage: mv &lt;src&gt; &lt;dst&gt;', 'out-warn'); return; }
+    const srcSegs = resolvePath(c.cwd, c.home, args[0]);
+    const srcParent = getParent(c.fsRoot, srcSegs);
+    const srcName = srcSegs[srcSegs.length-1];
+    if(!srcParent || !srcParent.children[srcName]){ fsError('mv', args[0], 'No such file or directory'); return; }
+    const dstSegs = resolvePath(c.cwd, c.home, args[1]);
+    const dstParent = getParent(c.fsRoot, dstSegs);
+    if(!dstParent){ fsError('mv', args[1], 'No such file or directory'); return; }
+    dstParent.children[dstSegs[dstSegs.length-1]] = srcParent.children[srcName];
+    delete srcParent.children[srcName];
+  }
+
+  function cmd_grep(args){
+    const c = ctx();
+    const ci = args.includes('-i');
+    const rest = args.filter(a => a !== '-i');
+    if(rest.length < 2){ line('usage: grep [-i] &lt;pattern&gt; &lt;file&gt;', 'out-warn'); return; }
+    const pattern = rest[0], target = rest[1];
+    const segs = resolvePath(c.cwd, c.home, target);
+    const node = getNode(c.fsRoot, segs);
+    if(!node || node.type !== 'file'){ fsError('grep', target, 'No such file'); return; }
+    const lines = node.content.split('\n');
+    const matches = lines.filter(l => ci ? l.toLowerCase().includes(pattern.toLowerCase()) : l.includes(pattern));
+    if(matches.length === 0) return;
+    matches.forEach(m => line(escapeHtml(m), 'out-info'));
+  }
+
+  function cmd_find(args){
+    const c = ctx();
+    const nameIdx = args.indexOf('-name');
+    const pattern = nameIdx !== -1 ? args[nameIdx+1] : null;
+    const pathArg = args.find((a,i) => !a.startsWith('-') && i !== nameIdx+1) || '.';
+    const startSegs = resolvePath(c.cwd, c.home, pathArg);
+    const startNode = getNode(c.fsRoot, startSegs);
+    if(!startNode){ fsError('find', pathArg, 'No such file or directory'); return; }
+    const regex = pattern ? new RegExp('^'+pattern.split('*').map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('.*')+'$') : null;
+    const results = [];
+    (function walk(node, segs){
+      const displayP = '/' + segs.join('/');
+      if(!regex || regex.test(segs[segs.length-1]||'')) results.push(displayP || '/');
+      if(node.type === 'dir'){
+        Object.keys(node.children).forEach(k => walk(node.children[k], segs.concat(k)));
+      }
+    })(startNode, startSegs);
+    if(results.length === 0){ return; }
+    results.forEach(r => line(r, 'out-info'));
+  }
+
+  function cmd_wc(args){
+    const c = ctx();
+    const linesOnly = args.includes('-l');
+    const target = args.find(a => !a.startsWith('-'));
+    if(!target){ line('usage: wc [-l] &lt;file&gt;', 'out-warn'); return; }
+    const segs = resolvePath(c.cwd, c.home, target);
+    const node = getNode(c.fsRoot, segs);
+    if(!node || node.type !== 'file'){ fsError('wc', target, 'No such file'); return; }
+    const lines = node.content.split('\n').length;
+    const words = node.content.split(/\s+/).filter(Boolean).length;
+    const chars = node.content.length;
+    line(linesOnly ? `${lines} ${target}` : `${lines} ${words} ${chars} ${target}`, 'out-info');
+  }
+
+  function headTail(args, isHead){
+    const c = ctx();
+    let n = 10;
+    const nIdx = args.indexOf('-n');
+    if(nIdx !== -1){ n = parseInt(args[nIdx+1],10)||10; }
+    const target = args.find((a,i) => !a.startsWith('-') && i !== nIdx+1 && args[i-1] !== '-n');
+    if(!target){ line(`usage: ${isHead?'head':'tail'} [-n N] &lt;file&gt;`, 'out-warn'); return; }
+    const segs = resolvePath(c.cwd, c.home, target);
+    const node = getNode(c.fsRoot, segs);
+    if(!node || node.type !== 'file'){ fsError(isHead?'head':'tail', target, 'No such file'); return; }
+    const lines = node.content.split('\n');
+    const slice = isHead ? lines.slice(0,n) : lines.slice(-n);
+    slice.forEach(l => line(escapeHtml(l), 'out-info'));
+  }
+
+  function cmd_chmod(args){
+    const c = ctx();
+    if(args.length < 2){ line('usage: chmod &lt;mode&gt; &lt;file&gt;', 'out-warn'); return; }
+    const [mode, target] = args;
+    const segs = resolvePath(c.cwd, c.home, target);
+    const node = getNode(c.fsRoot, segs);
+    if(!node){ fsError('chmod', target, 'No such file or directory'); return; }
+    node.perm = octalToPerm(mode) || node.perm;
+    line(`mode of '${target}' changed to ${mode}`, 'out-muted');
+  }
+  function octalToPerm(mode){
+    if(!/^[0-7]{3}$/.test(mode)) return null;
+    const map = {0:'---',1:'--x',2:'-w-',3:'-wx',4:'r--',5:'r-x',6:'rw-',7:'rwx'};
+    return '-' + mode.split('').map(d=>map[d]).join('');
+  }
+
+  function cmd_ps(){
+    const c = ctx();
+    const procs = c.kind === 'local'
+      ? [['PID','CMD'],['1','init'],['214','bash'],['318','cyberarena-shell']]
+      : [['PID','CMD'],['1','init'],['88','sshd'],['214','bash'],['940','apache2']];
+    procs.forEach((p,i) => line(i===0 ? `<span class="out-muted">${p[0].padEnd(6)}${p[1]}</span>` : `${p[0].padEnd(6)}${p[1]}`, 'out-info'));
+  }
+  function cmd_id(){
+    const c = ctx();
+    line(`uid=1000(${c.user}) gid=1000(${c.user}) groups=1000(${c.user})`, 'out-info');
+  }
+  function cmd_uname(args){
+    const c = ctx();
+    if(args.includes('-a')) line(`Linux ${c.host} 5.15.0-range #1 SMP x86_64 GNU/Linux`, 'out-info');
+    else line('Linux', 'out-info');
+  }
+  function cmd_sudo(args){
+    const c = ctx();
+    if(args[0] === '-l'){
+      if(c.kind === 'ssh'){
+        line(`Matching Defaults entries for ${c.user} on ${c.host}:`, 'out-muted');
+        line(`User ${c.user} may run the following commands on ${c.host}:`, 'out-muted');
+        line(`    (root) NOPASSWD: /usr/bin/systemctl status *`, 'out-info');
+      } else {
+        line('User recruit may run the following commands on cyberarena:', 'out-muted');
+        line('    (ALL) ALL', 'out-info');
+      }
+    } else {
+      line('sudo: this range only supports `sudo -l`', 'out-warn');
+    }
+  }
+  function cmd_history(){
+    state.history.forEach((h,i) => line(`  ${i+1}  ${escapeHtml(h)}`, 'out-muted'));
+  }
+
+  // ================= network / mission commands =================
+  function cmd_nmap(arg){
+    if(!arg){ line('usage: nmap &lt;host&gt;', 'out-warn'); return; }
+    const host = NET[arg];
+    if(!host){ line(`nmap: no route to host ${arg}`, 'out-error'); return; }
+    state.scanned[arg] = true;
+    line(`Starting scan on ${arg} (${host.name}) ...`, 'out-muted');
+    let rows = '<table class="nmap">' +
+      '<tr><td class="out-muted">PORT</td><td class="out-muted">STATE</td><td class="out-muted">SERVICE</td><td class="out-muted">VERSION</td></tr>' +
+      host.ports.map(p => `<tr><td>${p.port}/tcp</td><td class="out-ok">open</td><td>${p.svc}</td><td class="out-muted">${p.ver}</td></tr>`).join('') +
+      '</table>';
+    line(rows, 'out-info');
+    if(arg === '10.10.14.2' && state.stage === 0){
+      advanceStage(1);
+    }
+  }
+
+  function cmd_open(arg){
+    if(!arg){ line('usage: open &lt;host&gt;', 'out-warn'); return; }
+    const host = NET[arg];
+    if(!host){ line(`open: no route to host ${arg}`, 'out-error'); return; }
+    if(!state.scanned[arg]){
+      line('open: connection refused (scan the host first with nmap)', 'out-error');
+      addTrace(3, 'blind connection attempt');
+      return;
+    }
+    if(host.web){
+      line(`GET / HTTP/1.1 → 200 OK`, 'out-muted');
+      line(`<pre style="margin:0;white-space:pre-wrap">${escapeHtml(host.web.html)}</pre>`, 'out-info');
+      if(state.stage === 1){
+        state.knownCreds[arg] = {user:'admin', pass:'admin123'};
+        advanceStage(2);
+      }
+    } else if(host.sqli){
+      renderLoginLab(arg);
+    }
+  }
+
+  function renderLoginLab(hostKey){
+    const wrap = document.createElement('div');
+    wrap.className = 'line';
+    wrap.innerHTML = `
+      <div class="lab">
+        <div class="lab-title">ORCHARD // Staff Login Portal</div>
+        <label>Username</label>
+        <input type="text" id="labUser" placeholder="username" />
+        <label>Password</label>
+        <input type="password" id="labPass" placeholder="password" />
+        <button id="labSubmit">Sign in</button>
+      </div>`;
+    screen.appendChild(wrap);
+    screen.scrollTop = screen.scrollHeight;
+    document.getElementById('labSubmit').onclick = () => {
+      const u = document.getElementById('labUser').value;
+      const p = document.getElementById('labPass').value;
+      handleSqliAttempt(hostKey, u, p);
+    };
+  }
+  function handleSqliAttempt(hostKey, user, pass){
+    const injected = /'\s*or\s*'?1'?\s*=\s*'?1/i.test(user) || /'\s*or\s*'?1'?\s*=\s*'?1/i.test(pass) || /--/.test(user);
+    line(`[open:${hostKey}] login submitted: user="${escapeHtml(user)}" pass="${escapeHtml(pass)}"`, 'out-muted');
+    if(injected){
+      line('Query became truthy for every row — authentication bypassed.', 'out-ok');
+      line(`<span class="flag">${NET[hostKey].sqli.flag}</span>`, 'out-ok');
+      line('This works because input is dropped straight into the SQL string instead of a parameterized query. Real fix: prepared statements / bound parameters.', 'out-info');
+      advanceStage(4);
+    } else {
+      line('Access denied.', 'out-error');
+      addTrace(4, 'failed login attempt logged');
+    }
+  }
+
+  function cmd_ssh(arg){
+    const m = /^([^@]+)@(.+)$/.exec(arg||'');
+    if(!m){ line('usage: ssh user@host', 'out-warn'); return; }
+    const [, user, host] = m;
+    const target = NET[host];
+    if(!target){ line(`ssh: could not resolve host ${host}`, 'out-error'); return; }
+    if(!state.scanned[host]){ line('ssh: connection timed out (scan the host first)', 'out-error'); return; }
+    if(!target.ports.some(p => p.svc === 'ssh')){ line(`ssh: connect to host ${host} port 22: Connection refused`, 'out-error'); return; }
+    line(`Connecting to ${host} as ${user} ...`, 'out-muted');
+    state.awaitingPassword = {host, user};
+    updatePromptLabel();
+  }
+
+  function submitPassword(pw){
+    const {host, user} = state.awaitingPassword;
+    state.awaitingPassword = null;
+    const target = NET[host];
+    const good = target.ssh && target.ssh.validUser === user && target.ssh.validPass === pw;
+    if(good){
+      line('Authenticating... success.', 'out-ok');
+      const fsRoot = buildTree(target.ssh.flat);
+      const home = ['home', user];
+      contexts.push({ kind:'ssh', user, host, hostKey: host, fsRoot, home: home.slice(), cwd: home.slice() });
+      state.knownCreds[host] = {user, pass: pw};
+      if(state.stage <= 2) line('You\'re in. `ls` to see what\'s here.', 'out-cyan');
+    } else {
+      line('Permission denied (password).', 'out-error');
+      addTrace(8, 'failed ssh authentication');
+    }
+    updatePromptLabel();
+  }
+
+  function cmd_exit(){
+    if(contexts.length <= 1){ line('exit: no active ssh session', 'out-warn'); return; }
+    const c = contexts.pop();
+    line(`Connection to ${c.host} closed.`, 'out-muted');
+    updatePromptLabel();
+  }
+
+  function cmd_debrief(){
+    line('── DEBRIEF ──────────────────────────────', 'out-cyan');
+    line('1. Recon before contact: scanning first is how real assessments start.', 'out-info');
+    line('2. Information disclosure: comments and staging notes routinely leak real credentials in the wild.', 'out-info');
+    line('3. Weak/default credentials remain one of the top initial-access vectors in real breaches.', 'out-info');
+    line('4. SQL injection: unsanitized input concatenated into a query lets an attacker rewrite its logic. Fix = parameterized queries.', 'out-info');
+    line('This range is fully isolated from the internet — safe to practice on freely.', 'out-muted');
+  }
+
+  function cmd_reset(){
+    state.trace = 0;
+    traceFill.style.width = '0%';
+    traceNum.textContent = '0%';
+    while(contexts.length > 1) contexts.pop();
+    state.awaitingPassword = null;
+    updatePromptLabel();
+    line('Trace cleared. Sessions dropped.', 'out-muted');
+  }
+
+  // ================= tokenizer + dispatcher =================
+  function tokenize(str){
+    const re = /"([^"]*)"|'([^']*)'|(\S+)/g;
+    const out = []; let m;
+    while((m = re.exec(str))) out.push(m[1] ?? m[2] ?? m[3]);
+    return out;
+  }
+
+  function runCommand(raw){
+    const text = raw.trim();
+    if(text.length === 0) return;
+
+    if(state.awaitingPassword){
+      echoCmd('•'.repeat(text.length));
+      submitPassword(text);
+      return;
+    }
+
+    echoCmd(text);
+    const parts = tokenize(text);
+    const cmd = parts[0].toLowerCase();
+    const args = parts.slice(1);
+
+    switch(cmd){
+      case 'help': cmd_help(); break;
+      case 'man': cmd_man(args[0]); break;
+      case 'nmap': cmd_nmap(args[0]); break;
+      case 'open': cmd_open(args[0]); break;
+      case 'ssh': cmd_ssh(args[0]); break;
+      case 'ls': cmd_ls(args); break;
+      case 'cd': cmd_cd(args); break;
+      case 'pwd': cmd_pwd(); break;
+      case 'cat': cmd_cat(args); break;
+      case 'echo': cmd_echo(args, text.slice(4).trim()); break;
+      case 'mkdir': cmd_mkdir(args); break;
+      case 'touch': cmd_touch(args); break;
+      case 'rm': cmd_rm(args); break;
+      case 'cp': cmd_cp(args); break;
+      case 'mv': cmd_mv(args); break;
+      case 'grep': cmd_grep(args); break;
+      case 'find': cmd_find(args); break;
+      case 'wc': cmd_wc(args); break;
+      case 'head': headTail(args, true); break;
+      case 'tail': headTail(args, false); break;
+      case 'chmod': cmd_chmod(args); break;
+      case 'whoami': line(ctx().user, 'out-info'); break;
+      case 'id': cmd_id(); break;
+      case 'uname': cmd_uname(args); break;
+      case 'date': line(new Date().toString(), 'out-info'); break;
+      case 'ps': cmd_ps(); break;
+      case 'sudo': cmd_sudo(args); break;
+      case 'history': cmd_history(); break;
+      case 'exit': cmd_exit(); break;
+      case 'status': setObjective(); line(`[${MISSIONS[state.stage].title}] ${MISSIONS[state.stage].brief}`, 'out-cyan'); break;
+      case 'debrief': cmd_debrief(); break;
+      case 'reset': cmd_reset(); break;
+      case 'clear': screen.innerHTML=''; break;
+      default:
+        line(`command not found: ${cmd} (try 'help')`, 'out-error');
+    }
+  }
+
+  // ================= input wiring =================
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter'){
+      const val = input.value;
+      input.value = '';
+      if(!state.awaitingPassword && val.trim().length){
+        state.history.push(val);
+        state.histIdx = state.history.length;
+      }
+      runCommand(val);
+    } else if(e.key === 'ArrowUp'){
+      if(state.history.length){
+        state.histIdx = Math.max(0, state.histIdx - 1);
+        input.value = state.history[state.histIdx] || '';
+        setTimeout(()=>input.setSelectionRange(input.value.length,input.value.length));
+      }
+      e.preventDefault();
+    } else if(e.key === 'ArrowDown'){
+      if(state.history.length){
+        state.histIdx = Math.min(state.history.length, state.histIdx + 1);
+        input.value = state.history[state.histIdx] || '';
+      }
+      e.preventDefault();
+    }
+  });
+  document.addEventListener('click', () => input.focus());
+
+  function tickClock(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString(); }
+  setInterval(tickClock, 1000);
+  tickClock();
+
+  boot();
+  input.focus();
+})();
+</script>
+</body>
+</html>
