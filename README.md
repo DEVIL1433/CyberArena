@@ -1,95 +1,32 @@
-# 🛡️ CyberArena
+# CyberArena
 
-> **The Future of Cybersecurity Starts Here.**
+**Play free browser hacking games — no installs, no sign-up.**
+Live at **[cyberarena.in](https://cyberarena.in)**
 
-CyberArena is an upcoming cybersecurity platform built for students, ethical hackers, security researchers, and technology enthusiasts. Our goal is to provide practical learning resources, hands-on labs, cybersecurity challenges, and a community-driven environment to help users strengthen their cybersecurity skills.
+CyberArena is a hands-on cybersecurity playground: terminal-based hacking
+games that run entirely in your browser. Pure front-end — your machine,
+your pace, nothing to install.
 
-## 🚀 Status
+## 🎮 Operations
 
-⚠️ **Platform is currently under development.**
+### Secure Shell (main game)
+Boot the terminal at [cyberarena.in](https://cyberarena.in) and work real
+engagement cases as a recruit operator — scan scoped hosts, follow the
+rules of engagement, close the case.
 
-Stay tuned for the official launch!
+### Breach Protocol — Operation Glass Ledger
+**[▶ Play](https://cyberarena.in/breach-protocol/)** — A whistleblower
+contract against Meridian Finance. Enumerate the network, exploit a sloppy
+login, dump and crack the admin hash, SSH into the finance server and take
+the flag. Trace meter, scoring, hints and XP included.
 
----
+## 🔗 Also from CyberArena
 
-## ✨ Features
+- **[Reconix](https://github.com/DEVIL1433/reconix)** — proof-based web
+  vulnerability scanner & attack-surface mapper, including a fully
+  standalone Android APK.
 
-- 🎨 Cyberpunk-inspired UI
-- 📱 Fully Responsive Design
-- ⚡ Fast & Lightweight
-- 💻 Pure HTML & CSS
-- 🌌 Animated Background
-- 🔥 Neon Glow Effects
-- 🎯 Coming Soon Landing Page
+## ⚠️ Rules
 
----
-
-## 🛠️ Built With
-
-- HTML5
-- CSS3
-- Google Fonts (Orbitron)
-
----
-
-## 📂 Project Structure
-
-```
-CyberArena/
-│
-├── index.html
-├── README.md
-└── assets/
-    ├── images/
-    └── icons/
-```
-
----
-
-## 🌐 Preview
-
-```
-CYBERARENA
-
-ENTER THE FUTURE OF CYBERSECURITY
-
-Platform Coming Soon
-```
-
----
-
-## 🎯 Vision
-
-CyberArena aims to become a one-stop platform for:
-
-- Ethical Hacking
-- Penetration Testing
-- Capture The Flag (CTF)
-- Cybersecurity Labs
-- Learning Resources
-- Security Tools
-- Community Collaboration
-
----
-
-## 📌 Current Version
-
-**v0.1.0 – Coming Soon**
-
----
-
-## 👨‍💻 Developer
-
-**DEVIL**
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License.
-
----
-
-### ⭐ Stay Tuned
-
-The future of cybersecurity is coming soon...
+These games simulate authorized security engagements. Only ever test real
+systems you own or are explicitly authorized to assess.
