@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CyberArena — Breach Protocol: Operation Glass Ledger</title>
+<style>
+  *{margin:0;box-sizing:border-box}
+  :root{--bg:#07090c;--panel:#090b0f;--line:#1d242c;--txt:#c9d4d8;--dim:#5b6b74;--mut:#8b98a0;--grn:#7ee787;--amb:#ffb224;--cyn:#22d3ee;--vio:#a78bfa}
+  body{background:var(--bg);color:var(--txt);font-family:Consolas,'SF Mono',Menlo,monospace;min-height:100vh;display:flex;flex-direction:column}
+  .top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 22px;background:#0b0e12;border-bottom:1px solid var(--line);font-size:12.5px}
+  .top b{color:#fff}.grn{color:var(--grn)}.amb{color:var(--amb)}.cyn{color:var(--cyn)}
+  .brand{background:linear-gradient(90deg,var(--cyn),var(--vio));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:.12em}
+  .layout{display:flex;flex:1;min-height:0}
+  .side{width:308px;flex:none;border-right:1px solid var(--line);padding:20px;background:var(--panel)}
+  .side h3{font-size:11px;letter-spacing:.28em;color:var(--dim);margin:0 0 12px}
+  .obj{padding:10px 12px;border:1px solid var(--line);margin-bottom:8px;font-size:12.8px;line-height:1.5;display:flex;gap:8px}
+  .obj .st{margin-left:auto;flex:none}
+  .obj.done{opacity:.42;text-decoration:line-through}
+  .obj.now{border-color:var(--cyn);background:rgba(34,211,238,.06)}
+  .brief{font-size:12.5px;color:var(--mut);line-height:1.65}
+  .bar{height:6px;background:#1d242c;margin-top:8px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyn),var(--vio));width:0%}
+  .tracebar i{background:linear-gradient(90deg,var(--amb),#f43f5e)}
+  .side .blk{margin-top:22px}
+  .hintbtn{margin-top:12px;width:100%;padding:10px;background:none;border:1px solid var(--line);color:var(--mut);font:inherit;font-size:12px;letter-spacing:.15em;cursor:pointer}
+  .hintbtn:hover{border-color:var(--amb);color:var(--amb)}
+  .termwrap{flex:1;display:flex;flex-direction:column;min-width:0;background:#05070a}
+  .term{flex:1;overflow-y:auto;padding:22px 26px;font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+  .term .dim{color:var(--dim)}.term .ok{color:var(--grn)}.term .warn{color:var(--amb)}.term .hl{color:var(--cyn)}.term .bad{color:#f87171}.term .cmd{color:#fff}
+  .inrow{display:flex;gap:8px;padding:12px 26px 18px;border-top:1px solid var(--line);background:#05070a}
+  .prompt{color:var(--grn);white-space:nowrap}
+  #inp{flex:1;background:none;border:none;outline:none;color:#fff;font:inherit;font-size:14px;caret-color:var(--grn)}
+  .overlay{position:fixed;inset:0;background:rgba(3,4,6,.88);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9}
+  .card{background:#0b0e12;border:1px solid var(--line);max-width:560px;padding:34px 36px}
+  .card .kick{font-size:11px;letter-spacing:.35em;color:var(--cyn)}
+  .card h1{font-family:'Segoe UI',system-ui,sans-serif;font-size:34px;margin:12px 0 10px;color:#fff}
+  .card h1 .grad{background:linear-gradient(90deg,var(--cyn),var(--vio));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .card p{color:var(--mut);line-height:1.7;font-size:14.5px}
+  .card .rules{margin:16px 0;font-size:13px;color:var(--txt);line-height:1.9}
+  .bigbtn{margin-top:20px;display:inline-block;background:linear-gradient(90deg,#06b6d4,#8b5cf6);color:#fff;padding:13px 28px;font-weight:800;letter-spacing:.14em;font-size:13px;cursor:pointer;border:none;font-family:inherit;box-shadow:0 0 24px rgba(34,211,238,.35)}
+  .scoregrid{display:grid;grid-template-columns:1fr auto;gap:7px 26px;margin-top:16px;font-size:14px}
+  .scoregrid b{color:#fff;text-align:right}
+  .hidden{display:none!important}
+  @media(max-width:820px){.layout{flex-direction:column}.side{width:100%;border-right:none;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <span><a href="../" style="color:#8b98a0;text-decoration:none">⌂ CYBERARENA</a> · ◉ <span class="brand">BREACH PROTOCOL</span> · MISSION 01 — OPERATION GLASS LEDGER</span>
+  <span>TIME <span class="amb" id="clock">00:00</span> · SCORE <b id="score">2000</b> · TRACE <span id="tracepct" class="grn">0%</span></span>
+</div>
+
+<div class="layout">
+  <aside class="side">
+    <h3>OBJECTIVES</h3>
+    <div id="objs"></div>
+    <div class="blk">
+      <h3>TARGET BRIEF</h3>
+      <p class="brief">Meridian Finance Group. One careless web server, one reused password. Get in, find the admin hash, crack it, walk into the finance server and take the flag. Quiet hands — the trace meter is watching.</p>
+    </div>
+    <div class="blk">
+      <h3>OPERATIVE XP</h3>
+      <div style="font-size:12px;color:var(--mut)" id="xplabel">LEVEL 1 — SCRIPT RUNNER</div>
+      <div class="bar"><i id="xpfill"></i></div>
+    </div>
+    <div class="blk">
+      <h3>TRACE RISK</h3>
+      <div class="bar tracebar"><i id="tracefill"></i></div>
+      <div style="font-size:11.5px;color:var(--dim);margin-top:6px">Noisy tools and failed logins raise the trace. 100% = burned.</div>
+    </div>
+    <button class="hintbtn" id="hintbtn">REQUEST HINT (−150 PTS)</button>
+  </aside>
+
+  <div class="termwrap">
+    <div class="term" id="term"></div>
+    <div class="inrow"><span class="prompt" id="prompt">ghost@kali:~$</span><input id="inp" autocomplete="off" spellcheck="false" placeholder="type a command — try: help"></div>
+  </div>
+</div>
+
+<div class="overlay" id="brief">
+  <div class="card">
+    <div class="kick">INCOMING CONTRACT</div>
+    <h1>Operation <span class="grad">Glass Ledger</span></h1>
+    <p>A whistleblower claims Meridian Finance is cooking its books. Your job: breach their network, reach the finance server, and extract the proof — the flag hidden on it.</p>
+    <div class="rules">
+      ▸ Work only from the terminal. Type <b style="color:#fff">help</b> to see your tools.<br>
+      ▸ Follow the objective ladder on the left.<br>
+      ▸ Loud tools work — but every decibel feeds the trace meter.<br>
+      ▸ Stuck? A hint costs 150 points. Pride costs more.
+    </div>
+    <button class="bigbtn" id="start">BEGIN OPERATION</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="endscreen">
+  <div class="card">
+    <div class="kick" id="endkick">MISSION COMPLETE</div>
+    <h1 id="endtitle">Clean <span class="grad">breach.</span></h1>
+    <p id="endflag" style="font-size:16px;color:#fff"></p>
+    <div class="scoregrid" id="scoregrid"></div>
+    <p id="endnote" style="margin-top:14px"></p>
+    <button class="bigbtn" id="again">RUN IT AGAIN</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= BREACH PROTOCOL — Mission 01 ================= */
+const $=id=>document.getElementById(id);
+const term=$('term'), inp=$('inp');
+const ADMIN_HASH='e99a18c428cb38d5f260853678922e03';   // md5('abc123') flavour; displayed as-is
+const ADMIN_PASS='Ledger#2025';
+const FLAG='FLAG{gl4ss_l3dg3r_0p3n}';
+
+let S;
+function freshState(){return{
+  started:false,over:false,secs:0,score:2000,hints:0,trace:0,
+  scanned:false,dumped:false,cracked:false,ssh:false,gotflag:false,
+  remote:false,cwd:'~',fails:0,hist:[],hi:-1,awaitPass:false,
+  xp:+(localStorage.getItem('bp_xp')||0), best:+(localStorage.getItem('bp_best')||0)
+};}
+S=freshState();
+
+const OBJECTIVES=[
+ ['Enumerate the target network','Run an nmap scan of the subnet. Try: nmap -sV 10.13.37.0/24'],
+ ['Exploit web01 — dump the admin hash','The login page on web01 (10.13.37.22) takes an id parameter. sqlmap was built for this: sqlmap -u "http://10.13.37.22/login.php?id=1" --dump'],
+ ['Crack the hash','Feed the dumped hash to your cracker: hashcat -m 0 '+ADMIN_HASH+' rockyou.txt'],
+ ['SSH into the finance server as admin','You have the admin password now. ssh admin@10.13.37.14 — the finance server.'],
+ ['Find and read the flag','You are inside fin-db01. Look around: ls, then cat the flag file.']
+];
+function objDone(i){return [S.scanned,S.dumped,S.cracked,S.ssh,S.gotflag][i];}
+function renderObjs(){
+  $('objs').innerHTML=OBJECTIVES.map((o,i)=>{
+    const d=objDone(i), cur=!d&&OBJECTIVES.findIndex((_,j)=>!objDone(j))===i;
+    return `<div class="obj ${d?'done':''} ${cur?'now':''}"><span>${o[0]}</span><span class="st">${d?'✓':cur?'▸':''}</span></div>`;
+  }).join('');
+  const done=OBJECTIVES.filter((_,i)=>objDone(i)).length;
+  $('xpfill').style.width=(done*20)+'%';
+  $('xplabel').textContent='LEVEL '+(1+Math.floor((S.xp+done*100)/500))+' — '+['SCRIPT RUNNER','GHOST','PHANTOM','OPERATOR','ZERO DAY'] [Math.min(4,Math.floor((S.xp+done*100)/500))];
+}
+function setTrace(v){S.trace=Math.max(0,Math.min(100,v));$('tracefill').style.width=S.trace+'%';$('tracepct').textContent=S.trace+'%';$('tracepct').className=S.trace<40?'grn':S.trace<75?'amb':'bad';
+  if(S.trace>=100&&!S.over) endGame(false);}
+function setScore(v){S.score=v;$('score').textContent=v;}
+function print(html,cls){const d=document.createElement('div');if(cls)d.className=cls;d.innerHTML=html;term.appendChild(d);term.scrollTop=term.scrollHeight;}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function seq(lines,gap,done){let i=0;(function n(){if(i<lines.length){const l=lines[i++];print(l[0],l[1]);setTimeout(n,gap);}else if(done)done();})();}
+function echoCmd(raw){print(`<span class="dim">${esc($('prompt').textContent)}</span> <span class="cmd">${esc(raw)}</span>`);}
+function complete(i){renderObjs();}
+
+/* ================= command engine ================= */
+function run(raw){
+  const line=raw.trim(); if(!line) return;
+  S.hist.unshift(line); S.hi=-1;
+  if(S.awaitPass){ handlePass(line); return; }
+  echoCmd(raw);
+  const parts=line.split(/\s+/); const c=parts[0].toLowerCase();
+  const arg=line.slice(parts[0].length).trim();
+  setTrace(S.trace+1);
+  if(S.remote) return remoteCmd(c,arg,line);
+  switch(c){
+    case 'help': return print(
+`Available tools:
+  <span class="hl">nmap</span> &lt;target&gt; ............ scan hosts &amp; services
+  <span class="hl">ping</span> &lt;host&gt; .............. check if a host is alive
+  <span class="hl">curl</span> &lt;url&gt; ............... fetch a web page
+  <span class="hl">sqlmap</span> -u &lt;url&gt; --dump .... exploit SQL injection, dump data
+  <span class="hl">hashcat</span> -m 0 &lt;hash&gt; rockyou.txt ... crack an MD5 hash
+  <span class="hl">ssh</span> user@host ............ log into a remote machine
+  <span class="hl">echo</span> &lt;text&gt; | base64 -d ... decode base64
+  <span class="hl">objectives</span> ............... restate the mission ladder
+  <span class="hl">hint</span> ..................... buy a hint (−150 pts)
+  <span class="hl">clear</span> .................... wipe the terminal`,'dim');
+    case 'clear': term.innerHTML=''; return;
+    case 'whoami': return print('ghost — freelance menace','dim');
+    case 'objectives': OBJECTIVES.forEach((o,i)=>print((objDone(i)?'✓ ':'▸ ')+o[0], objDone(i)?'dim':'')); return;
+    case 'hint': return giveHint();
+    case 'ping': return print(arg?`PING ${esc(arg)} — 3 packets transmitted, 3 received, 0% loss`:'usage: ping <host>','dim');
+    case 'nmap': return doNmap(arg);
+    case 'curl': return doCurl(arg);
+    case 'sqlmap': return doSqlmap(arg);
+    case 'hashcat': case 'john': return doHashcat(arg);
+    case 'ssh': return doSsh(arg);
+    case 'echo': return doEcho(line);
+    case 'ls': return print('loot/  notes.txt  tools/','dim');
+    case 'cat': return doCatLocal(arg);
+    case 'exit': return print('You are not logged into anything. The only way out is through.','warn');
+    default: setTrace(S.trace+1); return print(`bash: ${esc(c)}: command not found — type <span class="hl">help</span>`,'bad');
+  }
+}
+function doCatLocal(arg){
+  if(arg.includes('notes')) return print('Personal note: "Meridian\'s admin reuses ONE password for everything. Web panel, servers, probably his luggage." — source: a very talkative ex-employee.','dim');
+  if(arg.includes('loot')) return print('Directory is empty. For now.','dim');
+  return print(`cat: ${esc(arg||'')} — no such file here. Try: ls`,'bad');
+}
+function doEcho(line){
+  const m=line.match(/echo\s+"?([^"|]+)"?\s*\|\s*base64\s+-d/);
+  if(m){ try{ return print(atob(m[1].trim()),'ok'); }catch(e){ return print('base64: invalid input','bad'); } }
+  return print(esc(line.replace(/^echo\s+/, '').replace(/^"|"$/g,'')),'dim');
+}
+function doNmap(arg){
+  if(!arg) return print('usage: nmap -sV <target>','warn');
+  seq([
+    ['Starting Nmap 7.94 scan of 10.13.37.0/24 ...','dim'],
+    ['Nmap scan report for <span class="hl">10.13.37.14</span> (fin-db01) — 22/tcp ssh · 3306/tcp mysql',''],
+    ['Nmap scan report for <span class="hl">10.13.37.22</span> (web01) — 80/tcp http Apache · 443/tcp https',''],
+    ['Nmap scan report for <span class="hl">10.13.37.31</span> (dev-box) — 8080/tcp http (Jenkins, outdated)',''],
+    ['Nmap done: 3 hosts up in 4.12 seconds','dim'],
+  ],260,()=>{ if(!S.scanned){S.scanned=true;print('[+] Objective complete: network enumerated','ok');complete();} });
+}
+function doCurl(arg){
+  if(arg.includes('10.13.37.22')||arg.includes('web01')){
+    return print(`&lt;!-- Meridian Finance — staff login --&gt;
+&lt;form action="login.php" method="GET"&gt;
+  user id: &lt;input name="id"&gt;
+&lt;/form&gt;
+<span class="dim">&lt;!-- TODO(dev): parameterised queries before launch!! --&gt;</span>`,'dim');
+  }
+  if(arg.includes('10.13.37.31')||arg.includes('dev-box')){
+    return print('Jenkins login — "Please sign in". A sticky note on the dev\'s monitor would help. You don\'t have one. The web01 lead smells stronger.','dim');
+  }
+  return print('curl: (7) Failed to connect — host unreachable or firewalled','bad');
+}
+function doSqlmap(arg){
+  if(!(arg.includes('10.13.37.22')||arg.includes('web01'))) return print('sqlmap: target unreachable — point it at the web01 login (see curl).','warn');
+  if(!arg.includes('login')) return print('sqlmap: no injectable parameter found on that page. The login page takes an id… (curl it)','warn');
+  setTrace(S.trace+7);
+  seq([
+    ['[*] starting sqlmap 1.8 — target: http://10.13.37.22/login.php?id=1','dim'],
+    ['[*] testing connection to the target URL ... ok','dim'],
+    ['[!] GET parameter \'id\' appears to be <span class="hl">\'AND boolean-based blind\'</span> injectable','warn'],
+    ['[*] the back-end DBMS is MySQL &gt;= 5.0','dim'],
+    ['[*] fetching entries for table \'users\' ...','dim'],
+    ['Database: meridian_web · Table: users [3 entries]',''],
+    ['| 1 | admin | <span class="hl">'+ADMIN_HASH+'</span> |',''],
+    ['| 2 | priya | 25d55ad283aa400af464c76d713c07ad |',''],
+    ['| 3 | guest | 084e0343a0486ff05530df6c705c8bb4 |',''],
+  ],300,()=>{ if(!S.dumped){S.dumped=true;print('[+] Objective complete: admin hash dumped. Crack it.','ok');complete();} });
+}
+function doHashcat(arg){
+  if(!S.dumped) return print('hashcat: no hash loaded. Dump one first (objective 2).','warn');
+  if(!arg.includes(ADMIN_HASH.slice(0,10))&&!arg.includes('hash')) return print('hashcat: that is not the admin hash. Use the one sqlmap dumped.','warn');
+  setTrace(S.trace+3);
+  seq([
+    ['hashcat 6.2.6 starting ... mode 0 (MD5) · wordlist: rockyou.txt (14,344,392 passwords)','dim'],
+    ['[*] cracking ... 38% ... 71% ... 96% ...','dim'],
+    [`<span class="hl">${ADMIN_HASH}</span>:<span class="ok">${ADMIN_PASS}</span>`,''],
+    ['Status: Cracked · Time: 0:00:07 · Speed: 4,102 MH/s','dim'],
+  ],420,()=>{ if(!S.cracked){S.cracked=true;print('[+] Objective complete: admin password is '+ADMIN_PASS,'ok');complete();} });
+}
+function doSsh(arg){
+  if(!arg.includes('10.13.37.14')&&!arg.includes('fin-db01')) return print('ssh: that host refuses or does not exist. The finance server is 10.13.37.14.','warn');
+  if(!arg.includes('admin')) return print('ssh: log in as who? The dumped account was "admin".','warn');
+  if(!S.cracked) return print('ssh: you do not have the admin password yet. Crack the hash first.','warn');
+  S.awaitPass=true; $('prompt').textContent='admin@10.13.37.14\'s password:';
+  print('The authenticity of host \'fin-db01 (10.13.37.14)\' is established.','dim');
+  inp.type='password';
+}
+function handlePass(line){
+  inp.type='text'; S.awaitPass=false;
+  if(line===ADMIN_PASS){
+    S.remote=true; S.ssh=true; $('prompt').textContent='admin@fin-db01:~$';
+    print('Welcome to Ubuntu 22.04 LTS (fin-db01) — last login: today, by someone careless.','dim');
+    print('[+] Objective complete: inside the finance server','ok'); complete();
+  }else{
+    S.fails++; setTrace(S.trace+9); $('prompt').textContent='ghost@kali:~$';
+    print('Permission denied, please try again. (failed logins feed the trace)','bad');
+  }
+}
+/* -------- remote session -------- */
+const RFS={'ledger.db':'<binary — 4.2 MB of cooked books. This is the evidence. The flag is what you came for though.>','notes.txt':'"Flag file stays on this box until audit day. Password = the usual one. — R."','flag.txt':FLAG};
+function remoteCmd(c,arg){
+  switch(c){
+    case 'ls': return print('ledger.db  notes.txt  flag.txt','dim');
+    case 'pwd': return print('/home/admin','dim');
+    case 'whoami': return print('admin — king of a very small, very guilty castle','dim');
+    case 'cat': {
+      const f=(arg||'').trim();
+      if(RFS[f]){ print(esc(RFS[f]), f==='flag.txt'?'ok':'dim');
+        if(f==='flag.txt'&&!S.gotflag){S.gotflag=true;print('[+] FLAG CAPTURED','ok');complete();setTimeout(()=>endGame(true),700);} return; }
+      return print(`cat: ${esc(f)}: No such file`,'bad'); }
+    case 'exit': case 'logout': S.remote=false;$('prompt').textContent='ghost@kali:~$';return print('Connection to fin-db01 closed.','dim');
+    case 'clear': term.innerHTML=''; return;
+    case 'hint': return giveHint();
+    default: return print(`bash: ${esc(c)}: command not found on fin-db01 — ls / cat / exit live here`,'bad');
+  }
+}
+/* -------- hints / ending -------- */
+function giveHint(){
+  const i=OBJECTIVES.findIndex((_,j)=>!objDone(j));
+  if(i<0) return;
+  if(S.started){ setScore(S.score-150); S.hints++; }
+  print('HINT ▸ '+OBJECTIVES[i][1],'warn');
+}
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function endGame(won){
+  S.over=true;
+  const timePenalty=Math.min(600,S.secs*2), tracePenalty=S.trace*5, hintPenalty=S.hints*150;
+  const final=Math.max(100, 2000-timePenalty-tracePenalty-hintPenalty);
+  if(won){ S.xp+=300; localStorage.setItem('bp_xp',S.xp); if(final>S.best){S.best=final;localStorage.setItem('bp_best',S.best);} }
+  $('endkick').textContent=won?'MISSION COMPLETE':'TRACE COMPLETE — YOU ARE BURNED';
+  $('endtitle').innerHTML=won?'Clean <span class="grad">breach.</span>':'Connection <span class="grad">torched.</span>';
+  $('endflag').textContent=won?('🏴 '+FLAG):'The SOC team thanks you for the telemetry.';
+  $('scoregrid').innerHTML=
+    `<span>Base</span><b>2000</b><span>Time penalty (${fmt(S.secs)})</span><b>−${timePenalty}</b>`+
+    `<span>Trace penalty (${S.trace}%)</span><b>−${tracePenalty}</b><span>Hints used (${S.hints})</span><b>−${hintPenalty}</b>`+
+    `<span style="color:#fff">FINAL SCORE</span><b style="color:var(--grn)">${won?final:'—'}</b>`+
+    (won?`<span>Best score</span><b>${S.best}</b>`:'');
+  $('endnote').textContent=won
+    ? 'Mission 02 is in development — follow CyberArena for the next contract. Built as a pure front-end game: no servers were harmed, or even involved.'
+    : 'Every loud command has a price. Run it again — quieter.';
+  $('endscreen').classList.remove('hidden');
+}
+/* -------- wiring -------- */
+inp.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){ const v=inp.value; inp.value=''; if(S.started&&!S.over) run(v); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); if(S.hi<S.hist.length-1){S.hi++;inp.value=S.hist[S.hi]||'';} }
+  else if(e.key==='ArrowDown'){ e.preventDefault(); if(S.hi>0){S.hi--;inp.value=S.hist[S.hi]||'';} else {S.hi=-1;inp.value='';} }
+});
+document.addEventListener('click',()=>inp.focus());
+$('hintbtn').addEventListener('click',()=>{ if(S.started&&!S.over){ echoCmd('hint'); giveHint(); } inp.focus(); });
+$('start').addEventListener('click',()=>{
+  $('brief').classList.add('hidden'); S.started=true; inp.focus();
+  print('ghost@kali — encrypted session established. Contract accepted: <span class="hl">Operation Glass Ledger</span>.','dim');
+  print('Type <span class="hl">help</span> for your toolkit. First move: map the network.','dim');
+  setInterval(()=>{ if(S.started&&!S.over){ S.secs++; $('clock').textContent=fmt(S.secs);} },1000);
+});
+$('again').addEventListener('click',()=>location.reload());
+renderObjs();
+</script>
+</body>
+</html>
